@@ -38,6 +38,8 @@
 
 using namespace std;
 
+bool logEnabled = false;
+
 //---------------------------------------------------------------------------------
 void stop (void) {
 //---------------------------------------------------------------------------------
@@ -114,42 +116,113 @@ int main(int argc, char **argv) {
 	// REG_SCFG_CLK = 0x80;
 	REG_SCFG_CLK = 0x85;
 
-	bool HealthandSafety_MSG = false;
+	bool HealthandSafety_MSG = true;
 	bool UseNTRSplash = true;
+	bool TWLCLK = true;
+	bool TWLVRAM = false;
 	bool TriggerExit = false;
-	// std::string	bootstrapPath = "";
+	std::string	gamesettingsPath = "";
 
 	bool consoleOn = false;
 
+	/* Log file is dissabled by default. If _nds/twloader/log exist, we turn log file on, else, log is dissabled */
+	struct stat logBuf;
+	logEnabled = stat("sd:/_nds/twloader/log", &logBuf) == 0;
+	/* Log configuration file end */
+	
 	/* scanKeys();
 	int pressed = keysDown(); */
 
 	if (fatInitDefault()) {
 		CIniFile twloaderini( "sd:/_nds/twloader/settings.ini" );
+		CIniFile bootstrapini( "sd:/_nds/nds-bootstrap.ini" );
 		
-		// bootstrapPath = twloaderini.GetString( "TWL-MODE", "BOOTSTRAP_INI", "");
+		// Didn't seem to work, aside from the language of the H&S screen changing.
+		// if(twloaderini.GetInt("TWL-MODE","USE_SYSLANG",0) == 0) {
+		// 	PersonalData->language = twloaderini.GetInt("TWL-MODE", "LANGUAGE", 0);
+		// }
 		
-		if(twloaderini.GetInt("TWL-MODE","HEALTH&SAFETY_MSG",0) == 1) { HealthandSafety_MSG = true; }
-		if(twloaderini.GetInt("TWL-MODE","TWL_CLOCK",0) == 1) { UseNTRSplash = false; }
+		char *p = (char*)PersonalData->name;
+		
+		// text
+		for (int i = 0; i < 10; i++) {
+			if (p[i*2] == 0x00)
+				p[i*2/2] = 0;
+			else
+				p[i*2/2] = p[i*2];
+		}
+		
+		if (logEnabled)	LogFMA("TWL.Main", "Got username", p);
+		
+		twloaderini.SetString("FRONTEND","NAME", p);
+		twloaderini.SaveIniFile( "sd:/_nds/twloader/settings.ini" );
+		if (logEnabled)	LogFMA("TWL.Main", "Saved username to GUI", p);
+		
+		gamesettingsPath = twloaderini.GetString( "TWL-MODE", "GAMESETTINGS_PATH", "");
+		
+		if(!access(gamesettingsPath.c_str(), F_OK)) {
+			CIniFile gamesettingsini( gamesettingsPath );
+			if(gamesettingsini.GetInt("GAME-SETTINGS","TWL_CLOCK",0) == -1) {
+				if(twloaderini.GetInt("TWL-MODE","TWL_CLOCK",0) == 0) { TWLCLK = false; }
+			} else {
+				if(gamesettingsini.GetInt("GAME-SETTINGS","TWL_CLOCK",0) == 0) {
+					TWLCLK = false;
+					bootstrapini.SetInt("NDS-BOOTSTRAP","BOOST_CPU", 0);
+				} else {
+					bootstrapini.SetInt("NDS-BOOTSTRAP","BOOST_CPU", 1);
+				}
+			}
+			if(gamesettingsini.GetInt("GAME-SETTINGS","TWL_VRAM",0) == -1) {
+				if(twloaderini.GetInt("TWL-MODE","TWL_VRAM",0) == 1) { TWLVRAM = true; }
+			} else {
+				if(gamesettingsini.GetInt("GAME-SETTINGS","TWL_VRAM",0) == 1) { TWLVRAM = true; }
+			}
+			if(gamesettingsini.GetInt("GAME-SETTINGS","LOCK_ARM9_SCFG_EXT",0) == -1) {
+				if(twloaderini.GetInt("TWL-MODE","LOCK_ARM9_SCFG_EXT",0) == 1) {
+					bootstrapini.SetInt("NDS-BOOTSTRAP","LOCK_ARM9_SCFG_EXT", 1);
+				} else {
+					bootstrapini.SetInt("NDS-BOOTSTRAP","LOCK_ARM9_SCFG_EXT", 0);
+				}
+			} else {
+				if(gamesettingsini.GetInt("GAME-SETTINGS","LOCK_ARM9_SCFG_EXT",0) == 1) {
+					bootstrapini.SetInt("NDS-BOOTSTRAP","LOCK_ARM9_SCFG_EXT", 1);
+				} else {
+					bootstrapini.SetInt("NDS-BOOTSTRAP","LOCK_ARM9_SCFG_EXT", 0);
+				}
+			}
+			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
+		} else {
+			if(twloaderini.GetInt("TWL-MODE","TWL_CLOCK",0) == 0) { TWLCLK = false; }
+			if(twloaderini.GetInt("TWL-MODE","TWL_VRAM",0) == 1) { TWLVRAM = true; }
+			if(twloaderini.GetInt("TWL-MODE","LOCK_ARM9_SCFG_EXT",0) == 1) {
+				bootstrapini.SetInt("NDS-BOOTSTRAP","LOCK_ARM9_SCFG_EXT", 1);
+			} else {
+				bootstrapini.SetInt("NDS-BOOTSTRAP","LOCK_ARM9_SCFG_EXT", 0);
+			}
+			bootstrapini.SaveIniFile( "sd:/_nds/nds-bootstrap.ini" );
+		}
+		
+		if(twloaderini.GetInt("TWL-MODE","BOOT_ANIMATION",0) == 2) { UseNTRSplash = false; }
+		if(twloaderini.GetInt("TWL-MODE","HEALTH&SAFETY_MSG",0) == 0) { HealthandSafety_MSG = false; }
 		if(twloaderini.GetInt("TWL-MODE","GBARUNNER",0) == 0)
-			if(twloaderini.GetInt("TWL-MODE","BOOT_ANIMATION",0) == 1) {
-				BootSplashInit(UseNTRSplash, HealthandSafety_MSG);
-				LogFM("TWL.Main.BootSplashInit", "Boot splash played");
+			if(twloaderini.GetInt("TWL-MODE","BOOT_ANIMATION",0) >= 1) {
+				BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language);
+				if (logEnabled)	LogFM("TWL.Main.BootSplashInit", "Boot splash played");
 			}
 		if(twloaderini.GetInt("TWL-MODE","DEBUG",0) != -1) {
 			consoleDemoInit();
 			consoleOn = true;
 		}
-		if(twloaderini.GetInt("TWL-MODE","TWL_CLOCK",0) == 1) {
+		if(TWLCLK) {
 			REG_SCFG_CLK |= 0x1;
-			LogFM("TWL.Main", "ARM9 CPU Speed set to 133mhz(TWL)");
+			if (logEnabled)	LogFM("TWL.Main", "ARM9 CPU Speed set to 133mhz(TWL)");
 			if(twloaderini.GetInt("TWL-MODE","DEBUG",0) == 1) {
 				printf("TWL_CLOCK ON\n");		
 			}
 		} else {
 			REG_SCFG_CLK = 0x80;
 			fifoSendValue32(FIFO_USER_04, 1);
-			LogFM("TWL.Main", "ARM9 CPU Speed set to 67mhz(NTR)");
+			if (logEnabled)	LogFM("TWL.Main", "ARM9 CPU Speed set to 67mhz(NTR)");
 		}
 
 		if(twloaderini.GetInt("TWL-MODE","BOOT_ANIMATION",0) == 0) {
@@ -168,14 +241,14 @@ int main(int argc, char **argv) {
 			if(twloaderini.GetInt("TWL-MODE","FORWARDER",0) == 1) {
 				if(twloaderini.GetInt("TWL-MODE","FLASHCARD",0) == 0 || twloaderini.GetInt("TWL-MODE","FLASHCARD",0) == 1 || twloaderini.GetInt("TWL-MODE","FLASHCARD",0) == 2 || twloaderini.GetInt("TWL-MODE","FLASHCARD",0) == 4) {} else {
 					fifoSendValue32(FIFO_USER_02, 1);
-					LogFM("TWL.Main", "Reset Slot-1 ON");
+					if (logEnabled)	LogFM("TWL.Main", "Reset Slot-1 ON");
 					if(twloaderini.GetInt("TWL-MODE","DEBUG",0) == 1) {
 						printf("RESET_SLOT1 ON\n");		
 					}
 				}
 			} else {
 				fifoSendValue32(FIFO_USER_02, 1);
-				LogFM("TWL.Main", "Reset Slot-1 ON");
+				if (logEnabled)	LogFM("TWL.Main", "Reset Slot-1 ON");
 				if(twloaderini.GetInt("TWL-MODE","DEBUG",0) == 1) {
 					printf("RESET_SLOT1 ON\n");		
 				}
@@ -200,9 +273,9 @@ int main(int argc, char **argv) {
 			}
 		}
 		
-		if(twloaderini.GetInt("TWL-MODE","TWL_VRAM",0) == 1) {
+		if(TWLVRAM) {
 			REG_SCFG_EXT |= 0x2000;
-			LogFM("TWL.Main", "VRAM boost on");
+			if (logEnabled)	LogFM("TWL.Main", "VRAM boost on");
 			if(twloaderini.GetInt("TWL-MODE","DEBUG",0) == 1) {
 				printf("TWL_VRAM ON\n");		
 			}
@@ -216,12 +289,12 @@ int main(int argc, char **argv) {
 		if(twloaderini.GetInt("TWL-MODE","LAUNCH_SLOT1",0) == 1) {
 			if(twloaderini.GetInt("TWL-MODE","DEBUG",0) != -1) {
 				printf("Now booting Slot-1 card\n");					
-				LogFM("TWL.Main", "Now booting Slot-1 card");
+				if (logEnabled)	LogFM("TWL.Main", "Now booting Slot-1 card");
 			}
 		}
 		if(twloaderini.GetInt("TWL-MODE","FORWARDER",0) == 1) {
 			if(twloaderini.GetInt("TWL-MODE","FLASHCARD",0) == 0) {
-				runFile("sd:/_nds/twloader/loadflashcard/dstt.nds");
+				runFile("sd:/_nds/loadcard_dstt.nds");
 			} else if(twloaderini.GetInt("TWL-MODE","FLASHCARD",0) == 1) {
 				runFile("sd:/_nds/twloader/loadflashcard/r4.nds");
 			} else if(twloaderini.GetInt("TWL-MODE","FLASHCARD",0) == 2) {
@@ -235,8 +308,13 @@ int main(int argc, char **argv) {
 			runFile("sd:/_nds/twloader/NTR_Launcher.nds");
 		}
 		
+		// Tell Arm7 to power off Slot-1.
+		fifoSendValue32(FIFO_USER_08, 1);
+
+		for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
+
 		if(twloaderini.GetInt("TWL-MODE","LAUNCH_SLOT1",0) == 0) {
-			LogFM("TWL.Main", "Now booting bootstrap");
+			if (logEnabled)	LogFM("TWL.Main", "Now booting bootstrap");
 			if(twloaderini.GetInt("TWL-MODE","DEBUG",0) != -1) {
 				printf("Now booting bootstrap\n");					
 			}
@@ -252,6 +330,8 @@ int main(int argc, char **argv) {
 	std::string filename;
 
 	if (!fatInitDefault()) {
+		BootSplashInit(UseNTRSplash, HealthandSafety_MSG, PersonalData->language);
+		
 		// Subscreen as a console
 		videoSetModeSub(MODE_0_2D);
 		vramSetBankH(VRAM_H_SUB_BG);

@@ -7,13 +7,17 @@ bool LogCreated = false;
 int createLog(void) {
 	if (!LogCreated){
 		FILE* log = fopen(LOG_PATH, "w");
+		if (!log){
+			return -1;
+		}
 		LogCreated = true;
 		Log("************** Log file created at ");
-		Log(RetTime().c_str());
+		Log(RetTime(true).c_str());
 		Log(" **************");
 		Log("\n");
 		fclose(log);
 	}
+	return 0;
 }
 
 void Log(const char *message) {

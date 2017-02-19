@@ -128,6 +128,7 @@ $(OUTPUT).elf	:	$(OFILES)
 # graphics
 #---------------------------------------------------------------------------------
 #Cartridge Wait Prompt (bottom screen)
+# English
 CartPrompt01.s			:	../$(IMAGES)/CartPrompt01.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
 
@@ -139,6 +140,31 @@ CartPrompt03.s			:	../$(IMAGES)/CartPrompt03.bmp
 
 CartPrompt04.s			:	../$(IMAGES)/CartPrompt04.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+# French
+CartPrompt01FR.s			:	../$(IMAGES)/CartPrompt01FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt02FR.s			:	../$(IMAGES)/CartPrompt02FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt03FR.s			:	../$(IMAGES)/CartPrompt03FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt04FR.s			:	../$(IMAGES)/CartPrompt04FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+# Italian
+CartPrompt01IT.s			:	../$(IMAGES)/CartPrompt01IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt02IT.s			:	../$(IMAGES)/CartPrompt02IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt03IT.s			:	../$(IMAGES)/CartPrompt03IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+CartPrompt04IT.s			:	../$(IMAGES)/CartPrompt04IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
 
 #DSi Cartridge Wait Prompt (bottom screen)
 DSiCartPrompt01.s			:	../$(IMAGES)/DSiCartPrompt01.bmp
@@ -173,7 +199,20 @@ Bot00.s			:	../$(IMAGES)/Bot00.bmp
 
 Bot01.s			:	../$(IMAGES)/Bot01.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+# Japanese
+Bot02JA.s			:	../$(IMAGES)/Bot02JA.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
 
+Bot03JA.s			:	../$(IMAGES)/Bot03JA.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot04JA.s			:	../$(IMAGES)/Bot04JA.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot05JA.s			:	../$(IMAGES)/Bot05JA.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+# English
 Bot02.s			:	../$(IMAGES)/Bot02.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
 
@@ -185,15 +224,59 @@ Bot04.s			:	../$(IMAGES)/Bot04.bmp
 
 Bot05.s			:	../$(IMAGES)/Bot05.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
-
-Bot06.s			:	../$(IMAGES)/Bot06.bmp
+	
+# French
+Bot02FR.s			:	../$(IMAGES)/Bot02FR.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
 
-Bot07.s			:	../$(IMAGES)/Bot07.bmp
+Bot03FR.s			:	../$(IMAGES)/Bot03FR.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
 
-Bot08.s			:	../$(IMAGES)/Bot08.bmp
+Bot04FR.s			:	../$(IMAGES)/Bot04FR.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot05FR.s			:	../$(IMAGES)/Bot05FR.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+	
+# German
+Bot02DE.s			:	../$(IMAGES)/Bot02DE.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot03DE.s			:	../$(IMAGES)/Bot03DE.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot04DE.s			:	../$(IMAGES)/Bot04DE.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot05DE.s			:	../$(IMAGES)/Bot05DE.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+# Italian
+Bot02IT.s			:	../$(IMAGES)/Bot02IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot03IT.s			:	../$(IMAGES)/Bot03IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot04IT.s			:	../$(IMAGES)/Bot04IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot05IT.s			:	../$(IMAGES)/Bot05IT.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+	
+# Spanish
+Bot02ES.s			:	../$(IMAGES)/Bot02ES.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot03ES.s			:	../$(IMAGES)/Bot03ES.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot04ES.s			:	../$(IMAGES)/Bot04ES.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
+Bot05ES.s			:	../$(IMAGES)/Bot05ES.bmp
+	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
+
 
 Bot09.s			:	../$(IMAGES)/Bot09.bmp
 	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q

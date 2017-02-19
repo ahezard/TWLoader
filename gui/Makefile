@@ -17,6 +17,26 @@ MAKEROM 	?= makerom
 BANNERTOOL 	?= bannertool
 
 #---------------------------------------------------------------------------------
+# 3DSX
+#---------------------------------------------------------------------------------
+
+COMPILE_3DSX  = 0
+
+#---------------------------------------------------------------------------------
+# Generate version number
+#---------------------------------------------------------------------------------
+
+VERSION_DIRTY := $(subst v,,$(shell git describe --tags --abbrev=0))
+VERSION_PARTS := $(subst ., ,$(VERSION_DIRTY))
+
+VERSION_MAJOR := 4
+VERSION_MINOR := 0
+VERSION_MICRO := 3
+
+#VERSION_MAJOR := $(word 1, $(VERSION_PARTS))
+#VERSION_MINOR := $(word 2, $(VERSION_PARTS))
+#VERSION_MICRO := $(word 3, $(VERSION_PARTS))
+#---------------------------------------------------------------------------------
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
@@ -36,7 +56,7 @@ BANNERTOOL 	?= bannertool
 #---------------------------------------------------------------------------------
 TARGET		:=	TWLoader
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	source source/img
 DATA		:=	data
 INCLUDES	:=	include
 ROMFS		:=	romfs
@@ -52,7 +72,7 @@ RSF_FILE	:=	app/build-cia.rsf
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations \
+CFLAGS	:=	-g -Wall -O2 -DCOMPILE_3DSX=$(COMPILE_3DSX) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) -mword-relocations \
 		-ffunction-sections \
 		$(ARCH)
 
@@ -63,7 +83,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lsfil -lsftd -lfreetype -lpng -lz -lsf2d -lcitro3d -lctru -lm -lstdc++
+LIBS	:= -lsfil -lsftd -lfreetype -lpng -ljpeg -lz -lsf2d -lcitro3d -lctru -lm -lstdc++
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -152,7 +172,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).cia $(TARGET).elf app/banner.bin app/icon.bin
+	@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).cia $(TARGET).elf
 
 
 #---------------------------------------------------------------------------------
@@ -172,20 +192,30 @@ DEPENDS	:=	$(OFILES:.o=.d)
 # main targets
 #---------------------------------------------------------------------------------
 all: $(OUTPUT).cia $(OUTPUT).elf $(OUTPUT).3dsx
+cia: $(OUTPUT).elf $(OUTPUT).cia
+3dsx: $(OUTPUT).elf $(OUTPUT).3dsx
 
 $(OUTPUT).elf	:	$(OFILES)
 
-$(OUTPUT).cia	:	$(OUTPUT).elf $(OUTPUT).smdh
-	$(BANNERTOOL) makebanner -i "../app/banner.png" -a "../app/BannerAudio.wav" -o "../app/banner.bin"
-
-	$(BANNERTOOL) makesmdh -i "../app/icon.png" -s "$(TARGET)" -l "$(TARGET)" -p "$(APP_AUTHOR)" -o "../app/icon.bin"
-
-	$(MAKEROM) -f cia -target t -exefslogo -o "../TWLoader.cia" -elf "../TWLoader.elf" -rsf "../app/build-cia.rsf" -banner "../app/banner.bin" -icon "../app/icon.bin" -logo "../app/logo.bcma.lz" -DAPP_ROMFS="$(TOPDIR)/$(ROMFS)" -major 1 -minor 1
+$(OUTPUT).cia	:	$(OUTPUT).elf
+	$(MAKEROM) -f cia -target t -exefslogo -o "../TWLoader.cia" -elf "../TWLoader.elf" -rsf "../app/build-cia.rsf" -banner "../app/banner.bin" -icon "../app/icon.bin" -logo "../app/twlv2-padded.lz11" -DAPP_ROMFS="$(TOPDIR)/$(ROMFS)" -major $(VERSION_MAJOR) -minor $(VERSION_MINOR) -micro $(VERSION_MICRO) -DAPP_VERSION_MAJOR="$(VERSION_MAJOR)"
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
 #---------------------------------------------------------------------------------
 %.bin.o	:	%.bin
+#---------------------------------------------------------------------------------
+	@echo $(notdir $<)
+	@$(bin2o)
+	
+#---------------------------------------------------------------------------------
+%.jpeg.o:	%.jpeg
+#---------------------------------------------------------------------------------
+	@echo $(notdir $<)
+	@$(bin2o)
+
+#---------------------------------------------------------------------------------
+%.png.o	:	%.png
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@$(bin2o)
