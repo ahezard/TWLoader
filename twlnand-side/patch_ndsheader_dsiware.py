@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 # -*- coding: utf8 -*-
 # Patch an .nds (works with homebrew and ds demo only) to make it ready for make_cia
 #
@@ -395,7 +394,7 @@ if not args.read:
 			iconSize=				2112,		
 			pubSaveDataSize= 		81920,
 			regionFlags=			'\xff\xff\xff\xff',	
-			title_id=				srlHeaderPatched.gameCode[::-1]+"\x05\x00\x03\x00",
+			title_id=				srlHeaderPatched.gameCode[::-1]+"\x04\x00\x03\x00",
 			twlRomSize=				srlHeaderPatched.ntrRomSize+totaldsisize,
 			unknown1=				'\x00\x00\x01\x00',
 			unknown2=				'\x00\x00\x00\x00|\x0f\x00\x00 \x05\x00\x00',
